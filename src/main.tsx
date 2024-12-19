@@ -5,6 +5,7 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import { Auth0Provider } from "@auth0/auth0-react";
 import { ThemeProvider } from "@/components/theme-provider";
+import "./i18n";
 
 import { TempoDevtools } from "tempo-devtools";
 TempoDevtools.init();

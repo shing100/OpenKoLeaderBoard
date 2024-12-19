@@ -1,6 +1,19 @@
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trophy, Star } from "lucide-react";
+import {
+  Trophy,
+  Star,
+  Sparkles,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
+
+type SortField = keyof Omit<ModelData, "type" | "co2">;
+type SortDirection = "asc" | "desc";
 
 interface ModelData {
   rank: number;
@@ -13,7 +26,6 @@ interface ModelData {
   gpqa: number;
   musr: number;
   mmlu: number;
-  co2: number;
 }
 
 interface ModelComparisonGridProps {
@@ -35,7 +47,6 @@ const ModelComparisonGrid = ({
       gpqa: 20.36,
       musr: 38.53,
       mmlu: 70.03,
-      co2: 33.01,
     },
     {
       rank: 2,
@@ -48,7 +59,6 @@ const ModelComparisonGrid = ({
       gpqa: 20.02,
       musr: 36.37,
       mmlu: 66.8,
-      co2: 13.0,
     },
     {
       rank: 3,
@@ -61,7 +71,6 @@ const ModelComparisonGrid = ({
       gpqa: 19.46,
       musr: 36.5,
       mmlu: 68.72,
-      co2: 32.22,
     },
     {
       rank: 4,
@@ -74,13 +83,25 @@ const ModelComparisonGrid = ({
       gpqa: 18.76,
       musr: 35.8,
       mmlu: 67.54,
-      co2: 28.15,
     },
   ],
   searchQuery = "",
   filterType = "all",
 }: ModelComparisonGridProps) => {
-  const filteredData = data
+  const { t } = useTranslation();
+  const [sortField, setSortField] = useState<SortField>("rank");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const sortedAndFilteredData = [...data]
     .filter((row) =>
       row.model.toLowerCase().includes(searchQuery.toLowerCase()),
     )
@@ -88,31 +109,87 @@ const ModelComparisonGrid = ({
       if (filterType === "all") return true;
       if (filterType === "top10") return row.rank <= 10;
       return row.type === filterType;
+    })
+    .sort((a, b) => {
+      const aValue = a[sortField];
+      const bValue = b[sortField];
+      const modifier = sortDirection === "asc" ? 1 : -1;
+
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return aValue.localeCompare(bValue) * modifier;
+      }
+      return ((aValue as number) - (bValue as number)) * modifier;
     });
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-4 w-4 ml-1" />;
+    return sortDirection === "asc" ? (
+      <ArrowUp className="h-4 w-4 ml-1" />
+    ) : (
+      <ArrowDown className="h-4 w-4 ml-1" />
+    );
+  };
+
+  const HeaderCell = ({
+    field,
+    label,
+    width,
+  }: {
+    field: SortField;
+    label: string;
+    width: string;
+  }) => (
+    <div
+      className={cn(
+        width,
+        "flex items-center justify-end cursor-pointer hover:text-foreground transition-colors",
+        field === "model" && "justify-start",
+      )}
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center">
+        {label}
+        <SortIcon field={field} />
+      </div>
+    </div>
+  );
 
   return (
     <Card className="w-full h-[600px] bg-background overflow-hidden border">
       <div className="w-full h-full">
         <div className="flex w-full items-center border-b bg-muted/50 px-4 py-3 text-sm font-medium text-muted-foreground sticky top-0">
-          <div className="w-16 text-center">#</div>
-          <div className="w-[300px]">Model</div>
-          <div className="w-24 text-right">Average</div>
-          <div className="w-24 text-right">IFEval</div>
-          <div className="w-24 text-right">BBH</div>
-          <div className="w-24 text-right">MATH</div>
-          <div className="w-24 text-right">GPQA</div>
-          <div className="w-24 text-right">MUSR</div>
-          <div className="w-24 text-right">MMLU-PRO</div>
-          <div className="w-24 text-right">CO₂ Cost</div>
+          <HeaderCell field="rank" label="#" width="w-16" />
+          <HeaderCell field="model" label="Model" width="w-[300px]" />
+          <HeaderCell field="average" label="Average" width="w-32" />
+          <HeaderCell field="ifeval" label="IFEval" width="w-32" />
+          <HeaderCell field="bbh" label="BBH" width="w-32" />
+          <HeaderCell field="math" label="MATH" width="w-32" />
+          <HeaderCell field="gpqa" label="GPQA" width="w-32" />
+          <HeaderCell field="musr" label="MUSR" width="w-32" />
+          <HeaderCell field="mmlu" label="MMLU-PRO" width="w-32" />
         </div>
 
         <ScrollArea className="h-[calc(600px-48px)]">
-          {filteredData.length > 0 ? (
-            filteredData.map((row) => (
+          {sortedAndFilteredData.length > 0 ? (
+            sortedAndFilteredData.map((row) => (
               <div
                 key={row.rank}
-                className="flex w-full items-center border-b hover:bg-muted/50 transition-colors px-4 py-4 group"
+                className="flex w-full items-center border-b hover:bg-muted/50 transition-colors px-4 py-4 group relative overflow-hidden"
               >
+                {/* Rank Background Gradient */}
+                {row.rank <= 3 && (
+                  <div
+                    className={cn(
+                      "absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity",
+                      row.rank === 1 &&
+                        "bg-gradient-to-r from-yellow-500 to-transparent",
+                      row.rank === 2 &&
+                        "bg-gradient-to-r from-zinc-500 to-transparent",
+                      row.rank === 3 &&
+                        "bg-gradient-to-r from-amber-500 to-transparent",
+                    )}
+                  />
+                )}
                 <div className="w-16 flex items-center justify-center">
                   {row.rank === 1 ? (
                     <div className="h-8 w-8 rounded-full bg-yellow-500/10 flex items-center justify-center">
@@ -124,7 +201,7 @@ const ModelComparisonGrid = ({
                     </div>
                   ) : row.rank === 3 ? (
                     <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center">
-                      <Star className="h-4 w-4 text-amber-500" />
+                      <Sparkles className="h-4 w-4 text-amber-500" />
                     </div>
                   ) : (
                     <span className="text-muted-foreground font-medium">
@@ -135,31 +212,28 @@ const ModelComparisonGrid = ({
                 <div className="w-[300px] font-medium text-primary group-hover:text-primary/80 transition-colors">
                   {row.model}
                 </div>
-                <div className="w-24 text-right">
+                <div className="w-32 text-right">
                   <span className="bg-green-500/10 text-green-700 dark:text-green-500 px-2.5 py-1.5 rounded-md font-medium">
                     {row.average.toFixed(2)}%
                   </span>
                 </div>
-                <div className="w-24 text-right font-medium">
+                <div className="w-32 text-right font-medium">
                   {row.ifeval.toFixed(2)}%
                 </div>
-                <div className="w-24 text-right font-medium">
+                <div className="w-32 text-right font-medium">
                   {row.bbh.toFixed(2)}%
                 </div>
-                <div className="w-24 text-right font-medium">
+                <div className="w-32 text-right font-medium">
                   {row.math.toFixed(2)}%
                 </div>
-                <div className="w-24 text-right font-medium">
+                <div className="w-32 text-right font-medium">
                   {row.gpqa.toFixed(2)}%
                 </div>
-                <div className="w-24 text-right font-medium">
+                <div className="w-32 text-right font-medium">
                   {row.musr.toFixed(2)}%
                 </div>
-                <div className="w-24 text-right font-medium">
+                <div className="w-32 text-right font-medium">
                   {row.mmlu.toFixed(2)}%
-                </div>
-                <div className="w-24 text-right font-medium">
-                  {row.co2.toFixed(2)}kg
                 </div>
               </div>
             ))
