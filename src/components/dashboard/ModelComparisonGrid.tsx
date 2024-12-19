@@ -11,8 +11,9 @@ import {
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
-type SortField = keyof Omit<ModelData, "type" | "co2">;
+type SortField = keyof Omit<ModelData, "type">;
 type SortDirection = "asc" | "desc";
 
 interface ModelData {
@@ -89,15 +90,26 @@ const ModelComparisonGrid = ({
   filterType = "all",
 }: ModelComparisonGridProps) => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [sortField, setSortField] = useState<SortField>("rank");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
+    try {
+      if (sortField === field) {
+        setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      } else {
+        setSortField(field);
+        setSortDirection("asc");
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Sorting Error",
+        description: "Failed to sort the data. Please try again.",
+      });
     }
   };
 
@@ -111,14 +123,23 @@ const ModelComparisonGrid = ({
       return row.type === filterType;
     })
     .sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
-      const modifier = sortDirection === "asc" ? 1 : -1;
+      try {
+        const aValue = a[sortField];
+        const bValue = b[sortField];
+        const modifier = sortDirection === "asc" ? 1 : -1;
 
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return aValue.localeCompare(bValue) * modifier;
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return aValue.localeCompare(bValue) * modifier;
+        }
+        return ((aValue as number) - (bValue as number)) * modifier;
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Sorting Error",
+          description: "Failed to sort the data. Please try again.",
+        });
+        return 0;
       }
-      return ((aValue as number) - (bValue as number)) * modifier;
     });
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -154,6 +175,22 @@ const ModelComparisonGrid = ({
     </div>
   );
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-[600px] bg-background border rounded-lg">
+        <div className="text-center space-y-4">
+          <p className="text-destructive font-medium">{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Card className="w-full h-[600px] bg-background overflow-hidden border">
       <div className="w-full h-full">
@@ -170,7 +207,11 @@ const ModelComparisonGrid = ({
         </div>
 
         <ScrollArea className="h-[calc(600px-48px)]">
-          {sortedAndFilteredData.length > 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : sortedAndFilteredData.length > 0 ? (
             sortedAndFilteredData.map((row) => (
               <div
                 key={row.rank}
