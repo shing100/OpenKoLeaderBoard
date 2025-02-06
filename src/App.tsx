@@ -6,6 +6,7 @@ import Rag from "./pages/rag";
 import DocumentParser from "./pages/products/document-parser";
 import ChatProduct from "./pages/products/chat";
 import Embedding from "./pages/products/embedding";
+import Documentation from "./pages/documentation";
 import routes from "tempo-routes";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -25,6 +26,7 @@ function App() {
         <Route path="/products/document-parser" element={<DocumentParser />} />
         <Route path="/products/chat" element={<ChatProduct />} />
         <Route path="/products/embedding" element={<Embedding />} />
+        <Route path="/documentation" element={<Documentation />} />
         {/* Tempo routes should be after regular routes */}
         {import.meta.env.VITE_TEMPO === "true" && <Route path="/tempobook/*" />}
       </Routes>

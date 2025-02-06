@@ -170,6 +170,7 @@ export const Layout = ({
                             "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
                             "w-full cursor-pointer",
                           )}
+                          onClick={() => navigate("/documentation")}
                         >
                           <div className="text-base font-medium mb-1">
                             {t("documentation")}
@@ -180,7 +181,10 @@ export const Layout = ({
                         </NavigationMenuLink>
                       </li>
                       <li>
-                        <NavigationMenuLink
+                        <a
+                          href="https://medium.com/@ctohr"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className={cn(
                             "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
                             "w-full cursor-pointer",
@@ -192,22 +196,7 @@ export const Layout = ({
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                             {t("blog_desc")}
                           </p>
-                        </NavigationMenuLink>
-                      </li>
-                      <li>
-                        <NavigationMenuLink
-                          className={cn(
-                            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-                            "w-full cursor-pointer",
-                          )}
-                        >
-                          <div className="text-base font-medium mb-1">
-                            {t("community")}
-                          </div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {t("community_desc")}
-                          </p>
-                        </NavigationMenuLink>
+                        </a>
                       </li>
                     </ul>
                   </NavigationMenuContent>
