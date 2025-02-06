@@ -1,8 +1,8 @@
 import { useState } from "react";
-import LogicKorGrid from "@/components/dashboard/LogicKorGrid";
+import RagGrid from "@/components/dashboard/RagGrid";
 import { Layout } from "@/components/layout";
 
-const LogicKor = () => {
+const Rag = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
@@ -152,6 +152,36 @@ const LogicKor = () => {
                         </p>
                       </NavigationMenuLink>
                     </li>
+                    <li>
+                      <NavigationMenuLink
+                        className={cn(
+                          "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                          "w-full cursor-pointer",
+                        )}
+                      >
+                        <div className="text-base font-medium mb-1">
+                          {t("blog")}
+                        </div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          {t("blog_desc")}
+                        </p>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink
+                        className={cn(
+                          "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                          "w-full cursor-pointer",
+                        )}
+                      >
+                        <div className="text-base font-medium mb-1">
+                          {t("community")}
+                        </div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          {t("community_desc")}
+                        </p>
+                      </NavigationMenuLink>
+                    </li>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
@@ -172,9 +202,9 @@ const LogicKor = () => {
           <ThemeToggle />
         </div>
       </div>
-      <LogicKorGrid searchQuery={searchQuery} />
+      <RagGrid searchQuery={searchQuery} />
     </Layout>
   );
 };
 
-export default LogicKor;
+export default Rag;

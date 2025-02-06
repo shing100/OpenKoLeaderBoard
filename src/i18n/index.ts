@@ -17,9 +17,16 @@ i18n
 
           // Models Menu
           leaderboard: "Leaderboard",
+          products: "Products",
           leaderboard_desc:
             "Compare and analyze performance metrics across different models",
           submit_model: "Submit Model",
+          logickor_title: "LogicKor",
+          logickor_desc:
+            "Comprehensive evaluation of Korean language models across logical reasoning tasks",
+          rag_nav_title: "RAG Evaluation",
+          rag_nav_desc:
+            "Evaluation of embedding models, document parsers, and rerankers",
 
           // Benchmarks Menu
           text_generation: "Text Generation",
@@ -48,6 +55,40 @@ i18n
           // Footer
           privacy_policy: "Privacy Policy",
           terms_of_service: "Terms of Service",
+
+          // RAG
+          rag_title: "RAG Evaluation Leaderboard",
+          rag_desc:
+            "Comprehensive evaluation of RAG components including embedding models, document parsers, and rerankers across different domains.",
+          rag_service: "Service",
+          rag_service_tooltip: "RAG Service Name",
+          rag_generator: "Generator",
+          rag_generator_tooltip: "LLM Model Used",
+          rag_parser: "Parser",
+          rag_parser_tooltip: "Document Parser",
+          rag_semantic: "Semantic",
+          rag_semantic_tooltip: "Semantic Embedding Model",
+          rag_lexical: "Lexical",
+          rag_lexical_tooltip: "Lexical Search Configuration",
+          rag_web: "Web",
+          rag_web_tooltip: "Web Search Configuration",
+          rag_rerank: "Rerank",
+          rag_rerank_tooltip: "Reranking Configuration",
+          rag_fusion: "Fusion",
+          rag_fusion_tooltip: "Fusion Configuration",
+          rag_finance: "Finance",
+          rag_finance_tooltip: "Finance domain score (60)",
+          rag_public: "Public",
+          rag_public_tooltip: "Public domain score (60)",
+          rag_medical: "Medical",
+          rag_medical_tooltip: "Medical domain score (60)",
+          rag_law: "Law",
+          rag_law_tooltip: "Law domain score (60)",
+          rag_commerce: "Commerce",
+          rag_commerce_tooltip: "Commerce domain score (60)",
+          rag_total: "Total",
+          rag_total_tooltip: "Total score (300)",
+          no_results: "No results found",
 
           // Model Form
           model_submission: "Model Submission Form",
@@ -81,8 +122,13 @@ i18n
 
           // Models Menu
           leaderboard: "리더보드",
+          products: "제품",
           leaderboard_desc: "다양한 모델의 성능 지표를 비교하고 분석하세요",
           submit_model: "모델 제출",
+          logickor_title: "LogicKor",
+          logickor_desc: "한국어 언어 모델의 논리적 추론 작업에 대한 종합 평가",
+          rag_nav_title: "RAG 평가",
+          rag_nav_desc: "임베딩 모델, 문서 파서, 리랭커의 평가",
 
           // Benchmarks Menu
           text_generation: "텍스트 생성",
@@ -110,6 +156,39 @@ i18n
           // Footer
           privacy_policy: "개인정보처리방침",
           terms_of_service: "이용약관",
+
+          // RAG
+          rag_title: "RAG 평가 리더보드",
+          rag_desc: "임베딩 모델, 문서 파서, 리랭커의 종합적인 평가",
+          rag_service: "서비스",
+          rag_service_tooltip: "RAG 서비스 이름",
+          rag_generator: "생성기",
+          rag_generator_tooltip: "사용된 LLM 모델",
+          rag_parser: "파서",
+          rag_parser_tooltip: "문서 파서",
+          rag_semantic: "의미적",
+          rag_semantic_tooltip: "의미적 임베딩 모델",
+          rag_lexical: "어휘적",
+          rag_lexical_tooltip: "어휘 검색 설정",
+          rag_web: "웹",
+          rag_web_tooltip: "웹 검색 설정",
+          rag_rerank: "재순위",
+          rag_rerank_tooltip: "재순위 설정",
+          rag_fusion: "퓨전",
+          rag_fusion_tooltip: "퓨전 설정",
+          rag_finance: "금융",
+          rag_finance_tooltip: "금융 도메인 점수 (60)",
+          rag_public: "공공",
+          rag_public_tooltip: "공공 도메인 점수 (60)",
+          rag_medical: "의료",
+          rag_medical_tooltip: "의료 도메인 점수 (60)",
+          rag_law: "법률",
+          rag_law_tooltip: "법률 도메인 점수 (60)",
+          rag_commerce: "상업",
+          rag_commerce_tooltip: "상업 도메인 점수 (60)",
+          rag_total: "총점",
+          rag_total_tooltip: "총점 (300)",
+          no_results: "결과를 찾을 수 없습니다.",
 
           // Model Form
           model_submission: "모델 제출 양식",
