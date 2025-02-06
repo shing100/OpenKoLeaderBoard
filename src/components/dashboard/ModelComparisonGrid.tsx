@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Star, Sparkles, HelpCircle, ArrowUpDown } from "lucide-react";
+import { ScoreSubmissionDialog } from "./ScoreSubmissionDialog";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -150,7 +151,7 @@ const ModelComparisonGrid = ({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold tracking-tight">
             Korean LLM Leaderboard
           </h2>
@@ -174,6 +175,157 @@ const ModelComparisonGrid = ({
             </Tooltip>
           </TooltipProvider>
         </div>
+        <ScoreSubmissionDialog
+          title={t("score_submission")}
+          description={t("score_submission_desc")}
+          fields={[
+            { name: "name", label: t("model_name"), required: true },
+            {
+              name: "kmmlu",
+              label: "KMMLU",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "gsm8k",
+              label: "GSM8K",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "gsm8k_ko",
+              label: "GSM8K-KO",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "ifeval",
+              label: "IFEval",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "haerae",
+              label: "HAERAE",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "kobest",
+              label: "KoBEST",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "mmlu",
+              label: "MMLU",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "mmlu_pro",
+              label: "MMLU-PRO",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "bbh",
+              label: "BBH",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "csatqa",
+              label: "CSATQA",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "gpqa",
+              label: "GPQA",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "arc_c",
+              label: "ARC-C",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+          ]}
+          onSubmit={async (data) => {
+            try {
+              const { error } = await supabase.from("models").insert([
+                {
+                  name: data.name,
+                  kmmlu: parseFloat(data.kmmlu),
+                  gsm8k: parseFloat(data.gsm8k),
+                  gsm8k_ko: parseFloat(data.gsm8k_ko),
+                  ifeval: parseFloat(data.ifeval),
+                  haerae: parseFloat(data.haerae),
+                  kobest: parseFloat(data.kobest),
+                  mmlu: parseFloat(data.mmlu),
+                  mmlu_pro: parseFloat(data.mmlu_pro),
+                  bbh: parseFloat(data.bbh),
+                  csatqa: parseFloat(data.csatqa),
+                  gpqa: parseFloat(data.gpqa),
+                  arc_c: parseFloat(data.arc_c),
+                  average: (
+                    (parseFloat(data.kmmlu) +
+                      parseFloat(data.gsm8k) +
+                      parseFloat(data.gsm8k_ko) +
+                      parseFloat(data.ifeval) +
+                      parseFloat(data.haerae) +
+                      parseFloat(data.kobest) +
+                      parseFloat(data.mmlu) +
+                      parseFloat(data.mmlu_pro) +
+                      parseFloat(data.bbh) +
+                      parseFloat(data.csatqa) +
+                      parseFloat(data.gpqa) +
+                      parseFloat(data.arc_c)) /
+                    12
+                  ).toFixed(1),
+                },
+              ]);
+              if (error) throw error;
+              toast({
+                title: "Success",
+                description: "Score submitted successfully",
+              });
+            } catch (error) {
+              console.error("Error inserting data:", error);
+              toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to submit score",
+              });
+            }
+          }}
+        />
       </div>
 
       <Card className="w-full h-[calc(100vh-220px)] min-h-[600px] bg-background overflow-hidden border">

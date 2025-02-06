@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Star, Sparkles, HelpCircle, ArrowUpDown } from "lucide-react";
+import { ScoreSubmissionDialog } from "./ScoreSubmissionDialog";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -189,7 +190,7 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold tracking-tight">
             {t("rag_title")}
           </h2>
@@ -209,6 +210,101 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
             </Tooltip>
           </TooltipProvider>
         </div>
+        <ScoreSubmissionDialog
+          title={t("score_submission")}
+          description={t("score_submission_desc")}
+          fields={[
+            { name: "service", label: t("rag_service"), required: true },
+            { name: "generator", label: t("rag_generator"), required: true },
+            { name: "parser", label: t("rag_parser"), required: true },
+            { name: "semantic", label: t("rag_semantic"), required: true },
+            { name: "lexical", label: t("rag_lexical"), required: true },
+            { name: "web", label: t("rag_web"), required: true },
+            { name: "rerank", label: t("rag_rerank"), required: true },
+            { name: "fusion", label: t("rag_fusion"), required: true },
+            {
+              name: "finance",
+              label: t("rag_finance"),
+              type: "number",
+              min: 0,
+              max: 60,
+              required: true,
+            },
+            {
+              name: "public",
+              label: t("rag_public"),
+              type: "number",
+              min: 0,
+              max: 60,
+              required: true,
+            },
+            {
+              name: "medical",
+              label: t("rag_medical"),
+              type: "number",
+              min: 0,
+              max: 60,
+              required: true,
+            },
+            {
+              name: "law",
+              label: t("rag_law"),
+              type: "number",
+              min: 0,
+              max: 60,
+              required: true,
+            },
+            {
+              name: "commerce",
+              label: t("rag_commerce"),
+              type: "number",
+              min: 0,
+              max: 60,
+              required: true,
+            },
+          ]}
+          onSubmit={async (data) => {
+            try {
+              const total =
+                parseFloat(data.finance) +
+                parseFloat(data.public) +
+                parseFloat(data.medical) +
+                parseFloat(data.law) +
+                parseFloat(data.commerce);
+
+              const { error } = await supabase.from("rag").insert([
+                {
+                  service: data.service,
+                  generator: data.generator,
+                  parser: data.parser,
+                  semantic: data.semantic,
+                  lexical: data.lexical,
+                  web: data.web,
+                  rerank: data.rerank,
+                  fusion: data.fusion,
+                  finance: parseFloat(data.finance),
+                  public: parseFloat(data.public),
+                  medical: parseFloat(data.medical),
+                  law: parseFloat(data.law),
+                  commerce: parseFloat(data.commerce),
+                  total: total,
+                },
+              ]);
+              if (error) throw error;
+              toast({
+                title: "Success",
+                description: "Score submitted successfully",
+              });
+            } catch (error) {
+              console.error("Error inserting data:", error);
+              toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to submit score",
+              });
+            }
+          }}
+        />
       </div>
 
       <Card className="w-full h-[calc(100vh-220px)] min-h-[600px] bg-background overflow-hidden border">

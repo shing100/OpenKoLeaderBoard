@@ -1,7 +1,9 @@
 import { Card } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Star, Sparkles, HelpCircle, ArrowUpDown } from "lucide-react";
+import { ScoreSubmissionDialog } from "./ScoreSubmissionDialog";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -57,6 +59,7 @@ const LoadingRow = () => (
 );
 
 const LogicKorGrid = ({ searchQuery = "" }: LogicKorGridProps) => {
+  const { t } = useTranslation();
   const [sortField, setSortField] = useState<SortField>("rank");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [isLoading, setIsLoading] = useState(true);
@@ -198,7 +201,7 @@ const LogicKorGrid = ({ searchQuery = "" }: LogicKorGridProps) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold tracking-tight">
             LogicKor Leaderboard
           </h2>
@@ -220,6 +223,165 @@ const LogicKorGrid = ({ searchQuery = "" }: LogicKorGridProps) => {
             </Tooltip>
           </TooltipProvider>
         </div>
+        <ScoreSubmissionDialog
+          title={t("score_submission")}
+          description={t("score_submission_desc")}
+          fields={[
+            { name: "name", label: t("model_name"), required: true },
+            {
+              name: "math_singleton",
+              label: "Math (Singleton)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "math_multiturn",
+              label: "Math (Multiturn)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "grammar_singleton",
+              label: "Grammar (Singleton)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "grammar_multiturn",
+              label: "Grammar (Multiturn)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "comprehension_singleton",
+              label: "Comprehension (Singleton)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "comprehension_multiturn",
+              label: "Comprehension (Multiturn)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "writing_singleton",
+              label: "Writing (Singleton)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "writing_multiturn",
+              label: "Writing (Multiturn)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "reasoning_singleton",
+              label: "Reasoning (Singleton)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "reasoning_multiturn",
+              label: "Reasoning (Multiturn)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "coding_singleton",
+              label: "Coding (Singleton)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+            {
+              name: "coding_multiturn",
+              label: "Coding (Multiturn)",
+              type: "number",
+              min: 0,
+              max: 100,
+              required: true,
+            },
+          ]}
+          onSubmit={async (data) => {
+            try {
+              const { error } = await supabase.from("logickor").insert([
+                {
+                  name: data.name,
+                  math_singleton: parseFloat(data.math_singleton),
+                  math_multiturn: parseFloat(data.math_multiturn),
+                  grammar_singleton: parseFloat(data.grammar_singleton),
+                  grammar_multiturn: parseFloat(data.grammar_multiturn),
+                  comprehension_singleton: parseFloat(
+                    data.comprehension_singleton,
+                  ),
+                  comprehension_multiturn: parseFloat(
+                    data.comprehension_multiturn,
+                  ),
+                  writing_singleton: parseFloat(data.writing_singleton),
+                  writing_multiturn: parseFloat(data.writing_multiturn),
+                  reasoning_singleton: parseFloat(data.reasoning_singleton),
+                  reasoning_multiturn: parseFloat(data.reasoning_multiturn),
+                  coding_singleton: parseFloat(data.coding_singleton),
+                  coding_multiturn: parseFloat(data.coding_multiturn),
+                  average: (
+                    // Singleton average
+                    ((parseFloat(data.math_singleton) +
+                      parseFloat(data.grammar_singleton) +
+                      parseFloat(data.comprehension_singleton) +
+                      parseFloat(data.writing_singleton) +
+                      parseFloat(data.reasoning_singleton) +
+                      parseFloat(data.coding_singleton)) /
+                      6 +
+                      // Multiturn average
+                      (parseFloat(data.math_multiturn) +
+                        parseFloat(data.grammar_multiturn) +
+                        parseFloat(data.comprehension_multiturn) +
+                        parseFloat(data.writing_multiturn) +
+                        parseFloat(data.reasoning_multiturn) +
+                        parseFloat(data.coding_multiturn)) /
+                        6) /
+                    2
+                  ).toFixed(1),
+                },
+              ]);
+              if (error) throw error;
+              toast({
+                title: "Success",
+                description: "Score submitted successfully",
+              });
+            } catch (error) {
+              console.error("Error inserting data:", error);
+              toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to submit score",
+              });
+            }
+          }}
+        />
       </div>
 
       <Card className="w-full h-[calc(100vh-220px)] min-h-[600px] bg-background overflow-hidden border">

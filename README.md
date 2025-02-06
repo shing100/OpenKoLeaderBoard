@@ -1,30 +1,66 @@
-# React + TypeScript + Vite
+# Korean LLM Leaderboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A comprehensive dashboard for comparing and analyzing Korean-focused Large Language Models across various benchmarks.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Main Leaderboard**: Compare models across standard benchmarks (KMMLU, GSM8K, etc.)
+- **LogicKor**: Evaluate models on logical reasoning tasks
+- **RAG Evaluation**: Assess RAG components including embedding models and document parsers
+- **Multilingual Support**: Full Korean and English language support
+- **Dark/Light Mode**: Automatic theme detection with manual override
+- **Responsive Design**: Works on desktop and mobile devices
 
-## Expanding the ESLint configuration
+## Benchmarks
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### Main Benchmarks
+- KMMLU (Korean Massive Multitask Language Understanding)
+- GSM8K & GSM8K-KO (Grade School Math)
+- IFEval (Instruction Following)
+- HAERAE (Korean Language Understanding)
+- KoBEST (Korean Benchmark of Evaluation for Standardized Tasks)
+- And more...
 
-- Configure the top-level `parserOptions` property like this:
+### LogicKor Categories
+- Mathematics
+- Grammar
+- Comprehension
+- Writing
+- Reasoning
+- Coding
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+### RAG Evaluation
+- Semantic Search
+- Document Parsing
+- Reranking
+- Domain-specific performance (Finance, Public, Medical, Law, Commerce)
+
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## Environment Variables
+
+Create a `.env` file with:
+
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT
