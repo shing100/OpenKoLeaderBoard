@@ -3,7 +3,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Star, Sparkles, HelpCircle, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Tooltip,
   TooltipContent,
@@ -33,36 +35,6 @@ interface LogicKorGridProps {
   searchQuery?: string;
 }
 
-const SAMPLE_DATA: ModelData[] = [
-  {
-    id: 1,
-    rank: 1,
-    name: "EXAONE-3.0-7.8B-Instruct",
-    math: { singleton: 7.0, multiturn: 6.57 },
-    grammar: { singleton: 8.57, multiturn: 7.43 },
-    comprehension: { singleton: 9.86, multiturn: 10.0 },
-    writing: { singleton: 9.71, multiturn: 9.71 },
-    reasoning: { singleton: 9.14, multiturn: 7.14 },
-    coding: { singleton: 9.29, multiturn: 9.14 },
-    average: 8.63,
-  },
-  {
-    id: 2,
-    rank: 2,
-    name: "EXAONE-3.5-2.4B-Instruct",
-    math: 8.43,
-    grammar: 6.43,
-    comprehension: 9.71,
-    writing: 9.86,
-    reasoning: 8.57,
-    coding: 9.43,
-    singleton: 7.5,
-    multiturn: 8.2,
-    average: 7.85,
-  },
-  // Add more sample data as needed
-];
-
 type SortField = keyof Omit<ModelData, "id">;
 type SortDirection = "asc" | "desc";
 
@@ -87,7 +59,68 @@ const LoadingRow = () => (
 const LogicKorGrid = ({ searchQuery = "" }: LogicKorGridProps) => {
   const [sortField, setSortField] = useState<SortField>("rank");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [modelData, setModelData] = useState<ModelData[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase.from("logickor").select("*");
+
+        if (error) throw error;
+
+        // Sort data by average score in descending order
+        const sortedData = data.sort((a, b) => b.average - a.average);
+
+        // Transform the data to match our ModelData interface
+        const transformedData = sortedData.map((item, index) => ({
+          id: item.id,
+          rank: index + 1,
+          name: item.name,
+          math: {
+            singleton: item.math_singleton,
+            multiturn: item.math_multiturn,
+          },
+          grammar: {
+            singleton: item.grammar_singleton,
+            multiturn: item.grammar_multiturn,
+          },
+          comprehension: {
+            singleton: item.comprehension_singleton,
+            multiturn: item.comprehension_multiturn,
+          },
+          writing: {
+            singleton: item.writing_singleton,
+            multiturn: item.writing_multiturn,
+          },
+          reasoning: {
+            singleton: item.reasoning_singleton,
+            multiturn: item.reasoning_multiturn,
+          },
+          coding: {
+            singleton: item.coding_singleton,
+            multiturn: item.coding_multiturn,
+          },
+          average: item.average,
+        }));
+
+        setModelData(transformedData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load model data. Please try again.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -98,12 +131,30 @@ const LogicKorGrid = ({ searchQuery = "" }: LogicKorGridProps) => {
     }
   };
 
-  const filteredData = SAMPLE_DATA.filter((row) =>
-    row.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  ).sort((a, b) => {
-    const modifier = sortDirection === "asc" ? 1 : -1;
-    return (a[sortField] - b[sortField]) * modifier;
-  });
+  const filteredData = modelData
+    .filter((row) => row.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => {
+      const modifier = sortDirection === "asc" ? 1 : -1;
+      if (sortField === "rank") {
+        // For rank, lower number is better
+        return (a.rank - b.rank) * modifier;
+      } else if (
+        sortField === "math" ||
+        sortField === "grammar" ||
+        sortField === "comprehension" ||
+        sortField === "writing" ||
+        sortField === "reasoning" ||
+        sortField === "coding"
+      ) {
+        const aAvg = (a[sortField].singleton + a[sortField].multiturn) / 2;
+        const bAvg = (b[sortField].singleton + b[sortField].multiturn) / 2;
+        return (aAvg - bAvg) * modifier;
+      } else if (sortField === "average") {
+        // For average, higher is better
+        return (b.average - a.average) * modifier;
+      }
+      return 0;
+    });
 
   const HeaderCell = ({
     field,
@@ -182,46 +233,43 @@ const LogicKorGrid = ({ searchQuery = "" }: LogicKorGridProps) => {
                 field="math"
                 label="수학"
                 tooltip="Mathematical problem-solving capability"
+                width="w-48"
               />
               <HeaderCell
                 field="grammar"
                 label="문법"
                 tooltip="Korean grammar understanding and usage"
+                width="w-48"
               />
               <HeaderCell
                 field="comprehension"
                 label="이해"
                 tooltip="Text comprehension and analysis"
+                width="w-48"
               />
               <HeaderCell
                 field="writing"
                 label="글쓰기"
                 tooltip="Writing and composition skills"
+                width="w-48"
               />
               <HeaderCell
                 field="reasoning"
                 label="추론"
                 tooltip="Logical reasoning and deduction"
+                width="w-48"
               />
               <HeaderCell
                 field="coding"
                 label="코딩"
                 tooltip="Code understanding and generation"
-              />
-              <HeaderCell
-                field="singleton"
-                label="싱글턴"
-                tooltip="Single-turn reasoning performance"
-              />
-              <HeaderCell
-                field="multiturn"
-                label="멀티턴"
-                tooltip="Multi-turn reasoning performance"
+                width="w-48"
               />
               <HeaderCell
                 field="average"
                 label="평균"
                 tooltip="Average score across all categories"
+                width="w-24"
               />
             </div>
 
