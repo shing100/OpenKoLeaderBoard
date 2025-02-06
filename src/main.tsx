@@ -5,9 +5,12 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./i18n";
-
 import { TempoDevtools } from "tempo-devtools";
+import { setupSupabase } from "./lib/supabase-setup";
+
+// Initialize Tempo and Supabase
 TempoDevtools.init();
+setupSupabase().catch(console.error);
 
 const basename = import.meta.env.BASE_URL;
 

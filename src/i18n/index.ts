@@ -28,14 +28,16 @@ i18n
           rag_nav_desc:
             "Evaluation of embedding models, document parsers, and rerankers",
 
-          // Benchmarks Menu
-          text_generation: "Text Generation",
-          text_generation_desc:
-            "Natural language generation and completion tasks",
-          code_generation: "Code Generation",
-          code_generation_desc: "Code completion and generation capabilities",
-          vision: "Vision",
-          vision_desc: "Image understanding and generation tasks",
+          // Products Menu
+          document_parser: "Document Parser",
+          document_parser_desc:
+            "Extract structured data from documents with high accuracy. Support for tables, forms, and complex layouts in various formats including PDF, DOCX, and images.",
+          chat: "Chat",
+          chat_desc:
+            "Enterprise-grade Korean chatbot with advanced context understanding, customizable personas, and multi-turn conversation capabilities.",
+          embedding: "Embedding",
+          embedding_desc:
+            "High-performance Korean text embeddings optimized for semantic search, recommendations, and document retrieval with domain adaptation support.",
 
           // Resources Menu
           documentation: "Documentation",
@@ -134,13 +136,16 @@ i18n
           rag_nav_title: "RAG 평가",
           rag_nav_desc: "임베딩 모델, 문서 파서, 리랭커의 평가",
 
-          // Benchmarks Menu
-          text_generation: "텍스트 생성",
-          text_generation_desc: "자연어 생성 및 완성 작업",
-          code_generation: "코드 생성",
-          code_generation_desc: "코드 완성 및 생성 기능",
-          vision: "비전",
-          vision_desc: "이미지 이해 및 생성 작업",
+          // Products Menu
+          document_parser: "문서 파서",
+          document_parser_desc:
+            "PDF, DOCX, 이미지 등 다양한 형식의 문서에서 표, 양식, 복잡한 레이아웃을 포함한 구조화된 데이터를 높은 정확도로 추출합니다.",
+          chat: "챗봇",
+          chat_desc:
+            "맞춤형 페르소나와 다중 턴 대화 기능을 갖춘 엔터프라이즈급 한국어 챗봇입니다.",
+          embedding: "임베딩",
+          embedding_desc:
+            "의미 검색, 추천, 문서 검색을 위한 고성능 한국어 텍스트 임베딩으로 도메인 적응을 지원합니다.",
 
           // Resources Menu
           documentation: "문서",

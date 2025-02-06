@@ -112,12 +112,13 @@ export const Layout = ({
                             "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
                             "w-full cursor-pointer",
                           )}
+                          onClick={() => navigate("/products/document-parser")}
                         >
                           <div className="text-base font-medium mb-1">
-                            {t("text_generation")}
+                            {t("document_parser")}
                           </div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {t("text_generation_desc")}
+                            {t("document_parser_desc")}
                           </p>
                         </NavigationMenuLink>
                       </li>
@@ -127,12 +128,13 @@ export const Layout = ({
                             "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
                             "w-full cursor-pointer",
                           )}
+                          onClick={() => navigate("/products/chat")}
                         >
                           <div className="text-base font-medium mb-1">
-                            {t("code_generation")}
+                            {t("chat")}
                           </div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {t("code_generation_desc")}
+                            {t("chat_desc")}
                           </p>
                         </NavigationMenuLink>
                       </li>
@@ -142,12 +144,13 @@ export const Layout = ({
                             "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
                             "w-full cursor-pointer",
                           )}
+                          onClick={() => navigate("/products/embedding")}
                         >
                           <div className="text-base font-medium mb-1">
-                            {t("vision")}
+                            {t("embedding")}
                           </div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {t("vision_desc")}
+                            {t("embedding_desc")}
                           </p>
                         </NavigationMenuLink>
                       </li>

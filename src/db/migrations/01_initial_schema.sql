@@ -63,70 +63,75 @@ CREATE TABLE IF NOT EXISTS rag (
     medical INTEGER NOT NULL CHECK (medical >= 0 AND medical <= 60),
     law INTEGER NOT NULL CHECK (law >= 0 AND law <= 60),
     commerce INTEGER NOT NULL CHECK (commerce >= 0 AND commerce <= 60),
-    total INTEGER NOT NULL CHECK (total >= 0 AND total <= 300),
-    CONSTRAINT unique_rag_service UNIQUE (service)
+    total INTEGER NOT NULL CHECK (total >= 0 AND total <= 300)
 );
-
--- Create function to update ranks
-CREATE OR REPLACE FUNCTION update_model_ranks()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE models
-    SET rank = ranks.rank
-    FROM (
-        SELECT id, ROW_NUMBER() OVER (ORDER BY average DESC) as rank
-        FROM models
-    ) ranks
-    WHERE models.id = ranks.id;
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION update_logickor_ranks()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE logickor
-    SET rank = ranks.rank
-    FROM (
-        SELECT id, ROW_NUMBER() OVER (ORDER BY average DESC) as rank
-        FROM logickor
-    ) ranks
-    WHERE logickor.id = ranks.id;
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION update_rag_ranks()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE rag
-    SET rank = ranks.rank
-    FROM (
-        SELECT id, ROW_NUMBER() OVER (ORDER BY total DESC) as rank
-        FROM rag
-    ) ranks
-    WHERE rag.id = ranks.id;
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-
--- Create triggers for rank updates
-CREATE TRIGGER update_model_ranks_trigger
-AFTER INSERT OR UPDATE OR DELETE ON models
-FOR EACH STATEMENT
-EXECUTE FUNCTION update_model_ranks();
-
-CREATE TRIGGER update_logickor_ranks_trigger
-AFTER INSERT OR UPDATE OR DELETE ON logickor
-FOR EACH STATEMENT
-EXECUTE FUNCTION update_logickor_ranks();
-
-CREATE TRIGGER update_rag_ranks_trigger
-AFTER INSERT OR UPDATE OR DELETE ON rag
-FOR EACH STATEMENT
-EXECUTE FUNCTION update_rag_ranks();
 
 -- Create indexes for better performance
 CREATE INDEX idx_models_average ON models(average DESC);
 CREATE INDEX idx_logickor_average ON logickor(average DESC);
 CREATE INDEX idx_rag_total ON rag(total DESC);
+CREATE INDEX idx_rag_service ON rag(service);
+
+-- Create materialized views for rankings
+CREATE MATERIALIZED VIEW model_rankings AS
+SELECT id, ROW_NUMBER() OVER (ORDER BY average DESC) as rank
+FROM models;
+
+CREATE MATERIALIZED VIEW logickor_rankings AS
+SELECT id, ROW_NUMBER() OVER (ORDER BY average DESC) as rank
+FROM logickor;
+
+CREATE MATERIALIZED VIEW rag_rankings AS
+SELECT id, ROW_NUMBER() OVER (ORDER BY total DESC) as rank
+FROM rag;
+
+-- Create functions to refresh rankings
+CREATE OR REPLACE FUNCTION refresh_all_rankings()
+RETURNS void AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW CONCURRENTLY model_rankings;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY logickor_rankings;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY rag_rankings;
+    
+    UPDATE models m SET rank = mr.rank
+    FROM model_rankings mr
+    WHERE m.id = mr.id;
+    
+    UPDATE logickor l SET rank = lr.rank
+    FROM logickor_rankings lr
+    WHERE l.id = lr.id;
+    
+    UPDATE rag r SET rank = rr.rank
+    FROM rag_rankings rr
+    WHERE r.id = rr.id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create triggers for rank updates
+CREATE OR REPLACE FUNCTION trigger_refresh_rankings()
+RETURNS trigger AS $$
+BEGIN
+    PERFORM refresh_all_rankings();
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER refresh_rankings_models
+AFTER INSERT OR UPDATE OR DELETE ON models
+FOR EACH STATEMENT
+EXECUTE FUNCTION trigger_refresh_rankings();
+
+CREATE TRIGGER refresh_rankings_logickor
+AFTER INSERT OR UPDATE OR DELETE ON logickor
+FOR EACH STATEMENT
+EXECUTE FUNCTION trigger_refresh_rankings();
+
+CREATE TRIGGER refresh_rankings_rag
+AFTER INSERT OR UPDATE OR DELETE ON rag
+FOR EACH STATEMENT
+EXECUTE FUNCTION trigger_refresh_rankings();
+
+-- Create indexes on materialized views
+CREATE UNIQUE INDEX ON model_rankings(id);
+CREATE UNIQUE INDEX ON logickor_rankings(id);
+CREATE UNIQUE INDEX ON rag_rankings(id);
