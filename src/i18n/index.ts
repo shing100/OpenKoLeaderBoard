@@ -44,8 +44,6 @@ i18n
           documentation_desc: "Guides and API documentation",
           blog: "Blog",
           blog_desc: "Latest updates and insights",
-          community: "Community",
-          community_desc: "Join our Discord community",
 
           // Auth
           sign_in: "Sign in",
@@ -152,8 +150,6 @@ i18n
           documentation_desc: "가이드 및 API 문서",
           blog: "블로그",
           blog_desc: "최신 업데이트 및 인사이트",
-          community: "커뮤니티",
-          community_desc: "디스코드 커뮤니티에 참여하세요",
 
           // Auth
           sign_in: "로그인",

@@ -27,7 +27,6 @@ function App() {
         <Route path="/products/chat" element={<ChatProduct />} />
         <Route path="/products/embedding" element={<Embedding />} />
         <Route path="/documentation" element={<Documentation />} />
-        {/* Tempo routes should be after regular routes */}
         {import.meta.env.VITE_TEMPO === "true" && <Route path="/tempobook/*" />}
       </Routes>
       {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
