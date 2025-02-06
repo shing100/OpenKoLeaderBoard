@@ -2,26 +2,69 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Star, Sparkles, HelpCircle, ArrowUpDown } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { supabase } from "@/lib/supabase";
-import type { Database } from "@/types/supabase";
 
-type ModelData = Database["public"]["Tables"]["models"]["Row"];
-type SortField = keyof Omit<ModelData, "created_at" | "id">;
-type SortDirection = "asc" | "desc";
+interface MetricData {
+  singleton: number;
+  multiturn: number;
+}
 
-interface ModelComparisonGridProps {
+interface ModelData {
+  id: number;
+  rank: number;
+  name: string;
+  math: MetricData;
+  grammar: MetricData;
+  comprehension: MetricData;
+  writing: MetricData;
+  reasoning: MetricData;
+  coding: MetricData;
+  average: number;
+}
+
+interface LogicKorGridProps {
   searchQuery?: string;
 }
+
+const SAMPLE_DATA: ModelData[] = [
+  {
+    id: 1,
+    rank: 1,
+    name: "EXAONE-3.0-7.8B-Instruct",
+    math: { singleton: 7.0, multiturn: 6.57 },
+    grammar: { singleton: 8.57, multiturn: 7.43 },
+    comprehension: { singleton: 9.86, multiturn: 10.0 },
+    writing: { singleton: 9.71, multiturn: 9.71 },
+    reasoning: { singleton: 9.14, multiturn: 7.14 },
+    coding: { singleton: 9.29, multiturn: 9.14 },
+    average: 8.63,
+  },
+  {
+    id: 2,
+    rank: 2,
+    name: "EXAONE-3.5-2.4B-Instruct",
+    math: 8.43,
+    grammar: 6.43,
+    comprehension: 9.71,
+    writing: 9.86,
+    reasoning: 8.57,
+    coding: 9.43,
+    singleton: 7.5,
+    multiturn: 8.2,
+    average: 7.85,
+  },
+  // Add more sample data as needed
+];
+
+type SortField = keyof Omit<ModelData, "id">;
+type SortDirection = "asc" | "desc";
 
 const LoadingRow = () => (
   <div className="flex w-full items-center border-b px-4 py-3">
@@ -31,7 +74,7 @@ const LoadingRow = () => (
     <div className="w-[300px]">
       <Skeleton className="h-5 w-40" />
     </div>
-    {Array(11)
+    {Array(8)
       .fill(0)
       .map((_, i) => (
         <div key={i} className="w-24 text-right">
@@ -41,43 +84,10 @@ const LoadingRow = () => (
   </div>
 );
 
-const ModelComparisonGrid = ({
-  searchQuery = "",
-}: ModelComparisonGridProps) => {
-  const { t } = useTranslation();
-  const { toast } = useToast();
+const LogicKorGrid = ({ searchQuery = "" }: LogicKorGridProps) => {
   const [sortField, setSortField] = useState<SortField>("rank");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [modelData, setModelData] = useState<ModelData[]>([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from("models")
-          .select("*")
-          .order(sortField, { ascending: sortDirection === "asc" });
-
-        if (error) throw error;
-        setModelData(data || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to load model data");
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load model data. Please try again.",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [sortField, sortDirection, toast]);
+  const [isLoading] = useState(false);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -88,9 +98,12 @@ const ModelComparisonGrid = ({
     }
   };
 
-  const filteredData = modelData.filter((row) =>
+  const filteredData = SAMPLE_DATA.filter((row) =>
     row.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  ).sort((a, b) => {
+    const modifier = sortDirection === "asc" ? 1 : -1;
+    return (a[sortField] - b[sortField]) * modifier;
+  });
 
   const HeaderCell = ({
     field,
@@ -131,28 +144,12 @@ const ModelComparisonGrid = ({
     </div>
   );
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-[800px] bg-background border rounded-lg">
-        <div className="text-center space-y-4">
-          <p className="text-destructive font-medium">{error}</p>
-          <button
-            onClick={() => setError(null)}
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            Try again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <h2 className="text-2xl font-bold tracking-tight">
-            Korean LLM Leaderboard
+            LogicKor Leaderboard
           </h2>
           <TooltipProvider>
             <Tooltip>
@@ -161,13 +158,11 @@ const ModelComparisonGrid = ({
               </TooltipTrigger>
               <TooltipContent className="w-[400px] p-4">
                 <div className="space-y-2">
-                  <h3 className="font-semibold">
-                    Korean LLM Benchmark Dashboard
-                  </h3>
+                  <h3 className="font-semibold">LogicKor Benchmark</h3>
                   <p className="text-sm text-muted-foreground">
-                    A comprehensive dashboard for comparing and analyzing
-                    Korean-focused Large Language Models across various
-                    benchmarks.
+                    A comprehensive evaluation of Korean language models across
+                    various logical reasoning tasks including mathematics,
+                    grammar, comprehension, writing, reasoning, and coding.
                   </p>
                 </div>
               </TooltipContent>
@@ -184,65 +179,49 @@ const ModelComparisonGrid = ({
               <HeaderCell field="rank" label="#" width="w-16" />
               <HeaderCell field="name" label="Model" width="w-[300px]" />
               <HeaderCell
+                field="math"
+                label="수학"
+                tooltip="Mathematical problem-solving capability"
+              />
+              <HeaderCell
+                field="grammar"
+                label="문법"
+                tooltip="Korean grammar understanding and usage"
+              />
+              <HeaderCell
+                field="comprehension"
+                label="이해"
+                tooltip="Text comprehension and analysis"
+              />
+              <HeaderCell
+                field="writing"
+                label="글쓰기"
+                tooltip="Writing and composition skills"
+              />
+              <HeaderCell
+                field="reasoning"
+                label="추론"
+                tooltip="Logical reasoning and deduction"
+              />
+              <HeaderCell
+                field="coding"
+                label="코딩"
+                tooltip="Code understanding and generation"
+              />
+              <HeaderCell
+                field="singleton"
+                label="싱글턴"
+                tooltip="Single-turn reasoning performance"
+              />
+              <HeaderCell
+                field="multiturn"
+                label="멀티턴"
+                tooltip="Multi-turn reasoning performance"
+              />
+              <HeaderCell
                 field="average"
-                label="Avg"
-                tooltip="Overall average score across all benchmarks"
-              />
-              <HeaderCell
-                field="kmmlu"
-                label="KMMLU"
-                tooltip="Korean Massive Multitask Language Understanding"
-              />
-              <HeaderCell
-                field="gsm8k"
-                label="GSM8K"
-                tooltip="Grade School Math 8K"
-              />
-              <HeaderCell
-                field="gsm8k_ko"
-                label="GSM8K-KO"
-                tooltip="Korean Grade School Math"
-              />
-              <HeaderCell
-                field="ifeval"
-                label="IFEval"
-                tooltip="Korean Instruction Following Evaluation"
-              />
-              <HeaderCell
-                field="haerae"
-                label="HAERAE"
-                tooltip="Korean Language Understanding"
-              />
-              <HeaderCell
-                field="kobest"
-                label="KoBEST"
-                tooltip="Korean Benchmark of Evaluation for Standardized Tasks"
-              />
-              <HeaderCell
-                field="mmlu"
-                label="MMLU"
-                tooltip="Massive Multitask Language Understanding"
-              />
-              <HeaderCell
-                field="mmlu_pro"
-                label="MMLU-PRO"
-                tooltip="Professional Knowledge Evaluation"
-              />
-              <HeaderCell field="bbh" label="BBH" tooltip="Big Bench Hard" />
-              <HeaderCell
-                field="csatqa"
-                label="CSATQA"
-                tooltip="Korean College Scholastic Ability Test QA"
-              />
-              <HeaderCell
-                field="gpqa"
-                label="GPQA"
-                tooltip="General Purpose Question Answering"
-              />
-              <HeaderCell
-                field="arc_c"
-                label="ARC-C"
-                tooltip="AI2 Reasoning Challenge (Challenge Set)"
+                label="평균"
+                tooltip="Average score across all categories"
               />
             </div>
 
@@ -295,46 +274,58 @@ const ModelComparisonGrid = ({
                   <div className="w-[300px] px-4 py-3 font-medium text-primary group-hover:text-primary/80 transition-colors text-xs truncate">
                     {row.name}
                   </div>
+                  <div className="w-48 px-4 py-3 text-right font-medium text-xs grid grid-cols-2 gap-2">
+                    <div className="text-muted-foreground">
+                      S: {row.math.singleton.toFixed(2)}
+                    </div>
+                    <div className="text-muted-foreground">
+                      M: {row.math.multiturn.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="w-48 px-4 py-3 text-right font-medium text-xs grid grid-cols-2 gap-2">
+                    <div className="text-muted-foreground">
+                      S: {row.grammar.singleton.toFixed(2)}
+                    </div>
+                    <div className="text-muted-foreground">
+                      M: {row.grammar.multiturn.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="w-48 px-4 py-3 text-right font-medium text-xs grid grid-cols-2 gap-2">
+                    <div className="text-muted-foreground">
+                      S: {row.comprehension.singleton.toFixed(2)}
+                    </div>
+                    <div className="text-muted-foreground">
+                      M: {row.comprehension.multiturn.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="w-48 px-4 py-3 text-right font-medium text-xs grid grid-cols-2 gap-2">
+                    <div className="text-muted-foreground">
+                      S: {row.writing.singleton.toFixed(2)}
+                    </div>
+                    <div className="text-muted-foreground">
+                      M: {row.writing.multiturn.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="w-48 px-4 py-3 text-right font-medium text-xs grid grid-cols-2 gap-2">
+                    <div className="text-muted-foreground">
+                      S: {row.reasoning.singleton.toFixed(2)}
+                    </div>
+                    <div className="text-muted-foreground">
+                      M: {row.reasoning.multiturn.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="w-48 px-4 py-3 text-right font-medium text-xs grid grid-cols-2 gap-2">
+                    <div className="text-muted-foreground">
+                      S: {row.coding.singleton.toFixed(2)}
+                    </div>
+                    <div className="text-muted-foreground">
+                      M: {row.coding.multiturn.toFixed(2)}
+                    </div>
+                  </div>
                   <div className="w-24 px-4 py-3 text-right">
                     <span className="bg-green-500/10 text-green-700 dark:text-green-500 px-2 py-0.5 rounded-md font-medium text-xs">
-                      {row.average.toFixed(1)}%
+                      {row.average.toFixed(2)}
                     </span>
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.kmmlu.toFixed(1)}%
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.gsm8k.toFixed(1)}%
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.gsm8k_ko.toFixed(1)}%
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.ifeval.toFixed(1)}%
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.haerae.toFixed(1)}%
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.kobest.toFixed(1)}%
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.mmlu.toFixed(1)}%
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.mmlu_pro.toFixed(1)}%
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.bbh.toFixed(1)}%
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.csatqa.toFixed(1)}%
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.gpqa.toFixed(1)}%
-                  </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.arc_c.toFixed(1)}%
                   </div>
                 </div>
               ))
@@ -350,4 +341,4 @@ const ModelComparisonGrid = ({
   );
 };
 
-export default ModelComparisonGrid;
+export default LogicKorGrid;

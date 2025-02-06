@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import ModelComparisonGrid from "./dashboard/ModelComparisonGrid";
-import { Footer } from "./footer";
-import { Input } from "./ui/input";
-import { Search } from "lucide-react";
-import { ThemeToggle } from "./theme-toggle";
 import { useNavigate } from "react-router-dom";
+import LogicKorGrid from "@/components/dashboard/LogicKorGrid";
+import { Footer } from "@/components/footer";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -13,13 +13,12 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 
-const Home = () => {
-  const navigate = useNavigate();
+const LogicKor = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   const { t } = useTranslation();
 
   return (
@@ -155,36 +154,6 @@ const Home = () => {
                           </p>
                         </NavigationMenuLink>
                       </li>
-                      <li>
-                        <NavigationMenuLink
-                          className={cn(
-                            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-                            "w-full cursor-pointer",
-                          )}
-                        >
-                          <div className="text-base font-medium mb-1">
-                            {t("blog")}
-                          </div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {t("blog_desc")}
-                          </p>
-                        </NavigationMenuLink>
-                      </li>
-                      <li>
-                        <NavigationMenuLink
-                          className={cn(
-                            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-                            "w-full cursor-pointer",
-                          )}
-                        >
-                          <div className="text-base font-medium mb-1">
-                            {t("community")}
-                          </div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {t("community_desc")}
-                          </p>
-                        </NavigationMenuLink>
-                      </li>
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -209,7 +178,7 @@ const Home = () => {
 
       <main className="flex-1 bg-muted/10">
         <div className="max-w-[1670px] w-full mx-auto p-6 space-y-6">
-          <ModelComparisonGrid searchQuery={searchQuery} />
+          <LogicKorGrid searchQuery={searchQuery} />
         </div>
       </main>
 
@@ -218,4 +187,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default LogicKor;
