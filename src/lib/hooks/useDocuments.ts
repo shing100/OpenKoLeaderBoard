@@ -41,11 +41,35 @@ export function useDocuments() {
     try {
       // Upload file to storage
       const fileExt = file.name.split(".").pop();
-      const filePath = `${Math.random()}.${fileExt}`;
+      const filePath = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-      const { error: uploadError, data } = await supabase.storage
+      // Create bucket if it doesn't exist
+      const { data: buckets } = await supabase.storage.listBuckets();
+      if (!buckets?.some((bucket) => bucket.name === "documents")) {
+        const { error: createError } = await supabase.storage.createBucket(
+          "documents",
+          {
+            public: true,
+            fileSizeLimit: 52428800, // 50MB
+            allowedMimeTypes: [
+              "image/jpeg",
+              "image/png",
+              "application/pdf",
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ],
+          },
+        );
+        if (createError) throw createError;
+      }
+
+      // Upload file
+      const { error: uploadError } = await supabase.storage
         .from("documents")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
       if (uploadError) throw uploadError;
 

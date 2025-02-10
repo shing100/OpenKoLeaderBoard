@@ -2,9 +2,23 @@ import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Minus, Plus, RotateCcw, Share } from "lucide-react";
+import {
+  Minus,
+  Plus,
+  RotateCcw,
+  Share,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+} from "lucide-react";
 import { useState } from "react";
 import { useDocuments } from "@/lib/hooks/useDocuments";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import "react-pdf/dist/esm/Page/TextLayer.css";
+
+// Set worker URL for PDF.js
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 const EXAMPLE_DOCS = [
   {
@@ -31,6 +45,8 @@ const DocumentParser = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [zoom, setZoom] = useState(100);
   const [currentPage, setCurrentPage] = useState(1);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [rotation, setRotation] = useState(0);
 
   const { documents, loading, error, uploadDocument, updateParsedContent } =
     useDocuments();
@@ -43,11 +59,23 @@ const DocumentParser = () => {
       setIsUploading(true);
       setUploadError(null);
       setSelectedFile(file);
+      setCurrentPage(1);
+      setZoom(100);
+      setRotation(0);
 
-      const url = await uploadDocument(file);
-      // Here you would typically call your document parsing API
-      const parsedContent = { text: "Sample parsed content" };
-      await updateParsedContent(url, parsedContent);
+      try {
+        const url = await uploadDocument(file);
+        // Here you would typically call your document parsing API
+        const parsedContent = { text: "Sample parsed content" };
+        await updateParsedContent(url, parsedContent);
+      } catch (uploadError) {
+        console.error("Upload error:", uploadError);
+        throw new Error(
+          uploadError instanceof Error
+            ? uploadError.message
+            : "파일 업로드에 실패했습니다.",
+        );
+      }
     } catch (error) {
       console.error("Error handling file:", error);
       setUploadError(
@@ -57,6 +85,18 @@ const DocumentParser = () => {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 10, 200));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 10, 50));
+  const handleRotate = () => setRotation((prev) => (prev + 90) % 360);
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, numPages || 1));
   };
 
   return (
@@ -71,7 +111,8 @@ const DocumentParser = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setZoom((prev) => Math.max(prev - 10, 50))}
+                  onClick={handleZoomOut}
+                  disabled={zoom <= 50}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -79,26 +120,57 @@ const DocumentParser = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setZoom((prev) => Math.min(prev + 10, 200))}
+                  onClick={handleZoomIn}
+                  disabled={zoom >= 200}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setZoom(100)}
-                >
+                <Button variant="ghost" size="icon" onClick={handleRotate}>
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               </div>
 
               <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage <= 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
                 <span className="text-sm text-muted-foreground">
-                  Page {currentPage} / 1
+                  Page {currentPage} / {numPages || 1}
                 </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleNextPage}
+                  disabled={!numPages || currentPage >= numPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
                 <Button variant="ghost" size="icon">
                   <Share className="h-4 w-4" />
                 </Button>
+                {selectedFile && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const url = URL.createObjectURL(selectedFile);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = selectedFile.name;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -148,18 +220,41 @@ const DocumentParser = () => {
                     </div>
                   </div>
                 ) : selectedFile ? (
-                  <div
-                    className="relative bg-white shadow-lg"
-                    style={{
-                      width: `${(zoom / 100) * 595}px`,
-                      height: `${(zoom / 100) * 842}px`,
-                    }}
-                  >
-                    <img
-                      src={URL.createObjectURL(selectedFile)}
-                      alt="Selected document"
-                      className="w-full h-full object-contain"
-                    />
+                  <div className="relative bg-white shadow-lg">
+                    {selectedFile.type === "application/pdf" ? (
+                      <Document
+                        file={selectedFile}
+                        onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                        loading={
+                          <div className="flex items-center justify-center h-full">
+                            <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                          </div>
+                        }
+                        error={
+                          <div className="flex items-center justify-center h-full text-destructive">
+                            Failed to load PDF
+                          </div>
+                        }
+                      >
+                        <Page
+                          pageNumber={currentPage}
+                          scale={zoom / 100}
+                          rotate={rotation}
+                          renderTextLayer={false}
+                          renderAnnotationLayer={false}
+                        />
+                      </Document>
+                    ) : (
+                      <img
+                        src={URL.createObjectURL(selectedFile)}
+                        alt="Selected document"
+                        className="w-full h-full object-contain"
+                        style={{
+                          transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
+                          transformOrigin: "center center",
+                        }}
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-8 w-full max-w-md">
@@ -209,10 +304,6 @@ const DocumentParser = () => {
                       />
 
                       <div className="text-sm text-muted-foreground">
-                        <p>
-                          The demo shows only the first three pages for
-                          multi-page files.
-                        </p>
                         <p>
                           JPEG, PNG, BMP, PDF, TIFF, HEIC, DOCX, XLSX, PPTX up
                           to 50MB

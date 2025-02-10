@@ -40,29 +40,15 @@ interface LogicKorGridProps {
 type SortField = keyof Omit<ModelData, "id">;
 type SortDirection = "asc" | "desc";
 
-const LoadingRow = () => (
-  <div className="flex w-full items-center border-b px-4 py-3">
-    <div className="w-16 flex items-center justify-start">
-      <Skeleton className="h-6 w-6 rounded-full" />
-    </div>
-    <div className="w-[300px]">
-      <Skeleton className="h-5 w-40" />
-    </div>
-    {Array(8)
-      .fill(0)
-      .map((_, i) => (
-        <div key={i} className="w-24 text-right">
-          <Skeleton className="h-5 w-16 ml-auto" />
-        </div>
-      ))}
-  </div>
-);
+import { LoadingGrid } from "./LoadingGrid";
+import { ErrorState } from "./ErrorState";
 
 const LogicKorGrid = ({ searchQuery = "" }: LogicKorGridProps) => {
   const { t } = useTranslation();
   const [sortField, setSortField] = useState<SortField>("rank");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [modelData, setModelData] = useState<ModelData[]>([]);
   const { toast } = useToast();
 
@@ -112,6 +98,7 @@ const LogicKorGrid = ({ searchQuery = "" }: LogicKorGridProps) => {
         setModelData(transformedData);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setError("Failed to load model data");
         toast({
           variant: "destructive",
           title: "Error",
@@ -346,8 +333,8 @@ const LogicKorGrid = ({ searchQuery = "" }: LogicKorGridProps) => {
                   reasoning_multiturn: parseFloat(data.reasoning_multiturn),
                   coding_singleton: parseFloat(data.coding_singleton),
                   coding_multiturn: parseFloat(data.coding_multiturn),
+                  // Singleton average
                   average: (
-                    // Singleton average
                     ((parseFloat(data.math_singleton) +
                       parseFloat(data.grammar_singleton) +
                       parseFloat(data.comprehension_singleton) +
@@ -437,11 +424,9 @@ const LogicKorGrid = ({ searchQuery = "" }: LogicKorGridProps) => {
 
             {/* Content */}
             {isLoading ? (
-              <div className="space-y-1">
-                {[...Array(8)].map((_, i) => (
-                  <LoadingRow key={i} />
-                ))}
-              </div>
+              <LoadingGrid columns={9} rows={8} />
+            ) : error ? (
+              <ErrorState message={error} onRetry={() => setError(null)} />
             ) : filteredData.length > 0 ? (
               filteredData.map((row) => (
                 <div

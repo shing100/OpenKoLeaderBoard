@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Star, Sparkles, HelpCircle, ArrowUpDown } from "lucide-react";
 import { ScoreSubmissionDialog } from "./ScoreSubmissionDialog";
 import { useTranslation } from "react-i18next";
@@ -41,29 +40,15 @@ interface RagGridProps {
   searchQuery?: string;
 }
 
-const LoadingRow = () => (
-  <div className="flex w-full items-center border-b px-4 py-3">
-    <div className="w-16 flex items-center justify-start">
-      <Skeleton className="h-6 w-6 rounded-full" />
-    </div>
-    <div className="w-[150px]">
-      <Skeleton className="h-5 w-40" />
-    </div>
-    {Array(7)
-      .fill(0)
-      .map((_, i) => (
-        <div key={i} className="w-24 text-right">
-          <Skeleton className="h-5 w-16 ml-auto" />
-        </div>
-      ))}
-  </div>
-);
+import { LoadingGrid } from "./LoadingGrid";
+import { ErrorState } from "./ErrorState";
 
 const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
   const { t } = useTranslation();
   const [sortField, setSortField] = useState<SortField>("total");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [modelData, setModelData] = useState<RagData[]>([]);
   const { toast } = useToast();
 
@@ -71,15 +56,15 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase.from("rag").select("*");
+        const { data, error } = await supabase
+          .from("rag")
+          .select("*")
+          .order("total", { ascending: false });
 
         if (error) throw error;
 
-        // Sort data by total score in descending order and assign ranks
-        const sortedData = [...data].sort((a, b) => b.total - a.total);
-
-        // Transform the data to match our RagData interface
-        const transformedData = sortedData.map((item, index) => ({
+        // Transform the data to match our RagData interface and assign ranks
+        const transformedData = data.map((item, index) => ({
           id: item.id,
           rank: index + 1,
           service: item.service,
@@ -101,6 +86,7 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
         setModelData(transformedData);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setError("Failed to load RAG evaluation data");
         toast({
           variant: "destructive",
           title: "Error",
@@ -119,7 +105,7 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortDirection("desc");
+      setSortDirection(field === "rank" ? "asc" : "desc");
     }
   };
 
@@ -138,7 +124,7 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
           sortField,
         )
       ) {
-        return (b[sortField] - a[sortField]) * modifier;
+        return (a[sortField] - b[sortField]) * modifier;
       }
       return a[sortField].localeCompare(b[sortField]) * modifier;
     });
@@ -157,11 +143,8 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
     <div
       className={cn(
         width,
-        "flex items-center gap-2 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors border-r border-border/50",
-        field === "service" ||
-          field === "generator" ||
-          field === "parser" ||
-          field === "semantic"
+        "flex items-center gap-2 px-2 py-3 cursor-pointer hover:bg-muted/50 transition-colors border-r border-border/50",
+        field === "service" || field === "rank"
           ? "justify-start"
           : "justify-end",
       )}
@@ -170,7 +153,7 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <span className="text-xs font-semibold text-muted-foreground">
                 {label}
               </span>
@@ -201,7 +184,7 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
               </TooltipTrigger>
               <TooltipContent className="w-[400px] p-4">
                 <div className="space-y-2">
-                  <h3 className="font-semibold">RAG Evaluation Metrics</h3>
+                  <h3 className="font-semibold">{t("rag_title")}</h3>
                   <p className="text-sm text-muted-foreground">
                     {t("rag_desc")}
                   </p>
@@ -210,6 +193,7 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
             </Tooltip>
           </TooltipProvider>
         </div>
+
         <ScoreSubmissionDialog
           title={t("score_submission")}
           description={t("score_submission_desc")}
@@ -287,9 +271,10 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
                   medical: parseFloat(data.medical),
                   law: parseFloat(data.law),
                   commerce: parseFloat(data.commerce),
-                  total: total,
+                  total,
                 },
               ]);
+
               if (error) throw error;
               toast({
                 title: "Success",
@@ -312,12 +297,12 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
           <div className="min-w-max">
             {/* Header */}
             <div className="flex w-full border-b bg-card sticky top-0 shadow-md z-10">
-              <HeaderCell field="rank" label="#" width="w-16" />
+              <HeaderCell field="rank" label="#" width="w-12" />
               <HeaderCell
                 field="service"
                 label={t("rag_service")}
                 tooltip={t("rag_service_tooltip")}
-                width="w-[120px]"
+                width="w-[180px]"
               />
               <HeaderCell
                 field="generator"
@@ -335,13 +320,13 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
                 field="semantic"
                 label={t("rag_semantic")}
                 tooltip={t("rag_semantic_tooltip")}
-                width="w-[250px]"
+                width="w-[100px]"
               />
               <HeaderCell
                 field="lexical"
                 label={t("rag_lexical")}
                 tooltip={t("rag_lexical_tooltip")}
-                width="w-[120px]"
+                width="w-[100px]"
               />
               <HeaderCell
                 field="web"
@@ -395,17 +380,15 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
                 field="total"
                 label={t("rag_total")}
                 tooltip={t("rag_total_tooltip")}
-                width="w-20"
+                width="w-24"
               />
             </div>
 
             {/* Content */}
             {isLoading ? (
-              <div className="space-y-1">
-                {[...Array(8)].map((_, i) => (
-                  <LoadingRow key={i} />
-                ))}
-              </div>
+              <LoadingGrid columns={14} rows={8} />
+            ) : error ? (
+              <ErrorState message={error} onRetry={() => setError(null)} />
             ) : filteredData.length > 0 ? (
               filteredData.map((row) => (
                 <div
@@ -426,7 +409,7 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
                       )}
                     />
                   )}
-                  <div className="w-16 px-4 py-3 flex items-center justify-start">
+                  <div className="w-12 px-2 py-3 flex items-center justify-start">
                     {row.rank === 1 ? (
                       <div className="h-6 w-6 rounded-full bg-yellow-500/10 flex items-center justify-center">
                         <Trophy className="h-3 w-3 text-yellow-500" />
@@ -445,104 +428,48 @@ const RagGrid = ({ searchQuery = "" }: RagGridProps) => {
                       </span>
                     )}
                   </div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-[120px] px-4 py-3 font-medium text-primary group-hover:text-primary/80 transition-colors text-xs truncate">
-                          {row.service}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>{row.service}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-[100px] px-4 py-3 font-medium text-xs truncate">
-                          {row.generator}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>{row.generator}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-[100px] px-4 py-3 font-medium text-xs truncate">
-                          {row.parser}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>{row.parser}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-[250px] px-4 py-3 font-medium text-xs truncate">
-                          {row.semantic}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>{row.semantic}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-[120px] px-4 py-3 font-medium text-xs truncate">
-                          {row.lexical || "N/A"}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>{row.lexical || "N/A"}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-[100px] px-4 py-3 font-medium text-xs truncate">
-                          {row.web || "N/A"}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>{row.web || "N/A"}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-[100px] px-4 py-3 font-medium text-xs truncate">
-                          {row.rerank || "N/A"}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>{row.rerank || "N/A"}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-[100px] px-4 py-3 font-medium text-xs truncate">
-                          {row.fusion || "N/A"}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>{row.fusion || "N/A"}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.finance}
+                  <div className="w-[180px] px-2 py-3 font-medium text-primary group-hover:text-primary/80 transition-colors text-xs truncate">
+                    {row.service}
                   </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.public}
+                  <div className="w-[100px] px-2 py-3 text-xs text-muted-foreground truncate">
+                    {row.generator}
                   </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.medical}
+                  <div className="w-[100px] px-2 py-3 text-xs text-muted-foreground truncate">
+                    {row.parser}
                   </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.law}
+                  <div className="w-[100px] px-2 py-3 text-xs text-muted-foreground truncate">
+                    {row.semantic}
                   </div>
-                  <div className="w-24 px-4 py-3 text-right font-medium text-xs">
-                    {row.commerce}
+                  <div className="w-[100px] px-2 py-3 text-xs text-muted-foreground truncate">
+                    {row.lexical}
                   </div>
-                  <div className="w-20 px-4 py-3 text-right">
-                    <span className="bg-green-500/10 text-green-700 dark:text-green-500 px-2 py-0.5 rounded-md font-medium text-xs">
-                      {row.total}
+                  <div className="w-[100px] px-2 py-3 text-xs text-muted-foreground truncate">
+                    {row.web}
+                  </div>
+                  <div className="w-[100px] px-2 py-3 text-xs text-muted-foreground truncate">
+                    {row.rerank}
+                  </div>
+                  <div className="w-[100px] px-2 py-3 text-xs text-muted-foreground truncate">
+                    {row.fusion}
+                  </div>
+                  <div className="w-24 px-2 py-3 text-right font-medium text-xs">
+                    {row.finance.toFixed(1)}
+                  </div>
+                  <div className="w-24 px-2 py-3 text-right font-medium text-xs">
+                    {row.public.toFixed(1)}
+                  </div>
+                  <div className="w-24 px-2 py-3 text-right font-medium text-xs">
+                    {row.medical.toFixed(1)}
+                  </div>
+                  <div className="w-24 px-2 py-3 text-right font-medium text-xs">
+                    {row.law.toFixed(1)}
+                  </div>
+                  <div className="w-24 px-2 py-3 text-right font-medium text-xs">
+                    {row.commerce.toFixed(1)}
+                  </div>
+                  <div className="w-24 px-2 py-3 text-right">
+                    <span className="bg-green-500/10 text-green-700 dark:text-green-500 px-1 py-0.5 rounded-md font-medium text-xs">
+                      {row.total.toFixed(1)}
                     </span>
                   </div>
                 </div>

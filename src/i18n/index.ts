@@ -10,7 +10,7 @@ i18n
       en: {
         translation: {
           // Navigation
-          llm_benchmark: "Korean LLM Leaderboard",
+          llm_benchmark: "RAG AI Tech Team | LLM Leaderboard",
           models: "Models",
           benchmarks: "Benchmarks",
           resources: "Resources",
@@ -119,7 +119,7 @@ i18n
       ko: {
         translation: {
           // Navigation
-          llm_benchmark: "한국어 LLM 리더보드",
+          llm_benchmark: "RAG AI기술팀 | LLM 리더보드",
           models: "모델",
           benchmarks: "벤치마크",
           resources: "리소스",

@@ -24,23 +24,8 @@ interface ModelComparisonGridProps {
   searchQuery?: string;
 }
 
-const LoadingRow = () => (
-  <div className="flex w-full items-center border-b px-4 py-3">
-    <div className="w-16 flex items-center justify-start">
-      <Skeleton className="h-6 w-6 rounded-full" />
-    </div>
-    <div className="w-[300px]">
-      <Skeleton className="h-5 w-40" />
-    </div>
-    {Array(11)
-      .fill(0)
-      .map((_, i) => (
-        <div key={i} className="w-24 text-right">
-          <Skeleton className="h-5 w-16 ml-auto" />
-        </div>
-      ))}
-  </div>
-);
+import { LoadingGrid } from "./LoadingGrid";
+import { ErrorState } from "./ErrorState";
 
 const ModelComparisonGrid = ({
   searchQuery = "",
@@ -400,11 +385,9 @@ const ModelComparisonGrid = ({
 
             {/* Content */}
             {isLoading ? (
-              <div className="space-y-1">
-                {[...Array(8)].map((_, i) => (
-                  <LoadingRow key={i} />
-                ))}
-              </div>
+              <LoadingGrid columns={12} rows={8} />
+            ) : error ? (
+              <ErrorState message={error} onRetry={() => setError(null)} />
             ) : filteredData.length > 0 ? (
               filteredData.map((row) => (
                 <div
