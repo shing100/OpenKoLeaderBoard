@@ -5,12 +5,14 @@ export const openai = new OpenAI({
   dangerouslyAllowBrowser: true, // Note: In production, you should use a backend proxy
 });
 
+export const MODEL_NAME = "gpt-4o-mini";
+
 export async function* streamChat(
   messages: { role: "user" | "assistant" | "system"; content: string }[],
 ) {
   try {
     const stream = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: MODEL_NAME,
       messages: [
         {
           role: "system",

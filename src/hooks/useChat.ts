@@ -1,5 +1,7 @@
-import { useState, useCallback, useRef } from "react";
-import { streamChat } from "@/lib/openai";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { streamChat, MODEL_NAME } from "@/lib/openai";
+import { supabase } from "@/lib/supabase";
+import { nanoid } from "nanoid";
 
 export interface Message {
   id: string;
@@ -7,16 +9,44 @@ export interface Message {
   content: string;
 }
 
-export function useChat() {
+export function useChat(initialSessionId?: string) {
+  const [sessionId] = useState(() => initialSessionId || nanoid());
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Load messages when component mounts or sessionId changes
+  useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("session_id", sessionId)
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+        if (data) {
+          setMessages(
+            data.map((msg) => ({
+              id: msg.id,
+              role: msg.role,
+              content: msg.content,
+            })),
+          );
+        }
+      } catch (err) {
+        console.error("Error loading messages:", err);
+      }
+    };
+
+    loadMessages();
+  }, [sessionId]);
+
   const sendMessage = useCallback(
     async (content: string) => {
       try {
-        // Cancel any ongoing request
         if (abortControllerRef.current) {
           abortControllerRef.current.abort();
         }
@@ -24,21 +54,32 @@ export function useChat() {
         setIsLoading(true);
         setError(null);
 
-        // Create new abort controller for this request
         abortControllerRef.current = new AbortController();
 
-        // Add user message and prepare assistant message in one update
+        // Create messages
         const userMessage: Message = {
-          id: Date.now().toString(),
+          id: nanoid(),
           role: "user",
           content,
         };
         const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
+          id: nanoid(),
           role: "assistant",
           content: "",
         };
+
+        // Add messages to UI
         setMessages((prev) => [...prev, userMessage, assistantMessage]);
+
+        // Save user message to database
+        await supabase.from("chat_messages").insert([
+          {
+            id: userMessage.id,
+            session_id: sessionId,
+            role: userMessage.role,
+            content: userMessage.content,
+          },
+        ]);
 
         // Stream the response
         const messageHistory = [...messages, userMessage].map(
@@ -46,11 +87,11 @@ export function useChat() {
         );
         const stream = streamChat(messageHistory);
 
+        let finalContent = "";
         for await (const chunk of stream) {
-          if (abortControllerRef.current?.signal.aborted) {
-            break;
-          }
+          if (abortControllerRef.current?.signal.aborted) break;
 
+          finalContent = chunk.content;
           setMessages((prev) => {
             const newMessages = [...prev];
             const lastMessage = newMessages[newMessages.length - 1];
@@ -60,12 +101,22 @@ export function useChat() {
             return newMessages;
           });
 
-          if (chunk.done) break;
+          if (chunk.done) {
+            // Save assistant message to database with model name
+            await supabase.from("chat_messages").insert([
+              {
+                id: assistantMessage.id,
+                session_id: sessionId,
+                role: "assistant",
+                content: finalContent,
+                model: MODEL_NAME,
+              },
+            ]);
+            break;
+          }
         }
       } catch (err) {
-        if (err instanceof Error && err.name === "AbortError") {
-          return;
-        }
+        if (err instanceof Error && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Failed to send message");
         console.error("Error in sendMessage:", err);
       } finally {
@@ -73,7 +124,7 @@ export function useChat() {
         abortControllerRef.current = null;
       }
     },
-    [messages],
+    [messages, sessionId],
   );
 
   return {
@@ -81,5 +132,6 @@ export function useChat() {
     isLoading,
     error,
     sendMessage,
+    sessionId,
   };
 }
