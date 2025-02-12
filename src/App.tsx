@@ -29,7 +29,6 @@ function App() {
         <Route path="/documentation" element={<Documentation />} />
         {import.meta.env.VITE_TEMPO === "true" && <Route path="/tempobook/*" />}
       </Routes>
-      {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
       <Toaster />
     </Suspense>
   );

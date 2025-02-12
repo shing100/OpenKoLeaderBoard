@@ -9,6 +9,9 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 const EXAMPLE_QUERIES = [
   "AI 기술 동향",
@@ -162,13 +165,35 @@ const ChatProduct = () => {
                       </div>
                     ) : (
                       <div className="space-y-2 max-w-2xl md:max-w-3xl lg:max-w-4xl">
-                        <div className="prose dark:prose-invert prose-sm max-w-none prose-p:leading-normal [&_table]:w-full [&_table]:border-collapse [&_table]:my-4 [&_th]:border [&_th]:border-border/50 [&_th]:bg-muted/50 [&_th]:p-2 [&_th]:text-left [&_td]:border [&_td]:border-border/50 [&_td]:p-2 [&_td]:align-top [&_code]:bg-[#2C2C2C] [&_code]:text-white/90 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[13.6px] [&_code]:font-mono [&_code]:before:content-none [&_code]:after:content-none">
+                        <div className="prose dark:prose-invert prose-sm max-w-none prose-p:leading-normal [&_table]:w-full [&_table]:border-collapse [&_table]:my-4 [&_th]:border [&_th]:border-border/50 [&_th]:bg-muted/50 [&_th]:p-2 [&_th]:text-left [&_td]:border [&_td]:border-border/50 [&_td]:p-2 [&_td]:align-top [&_code]:bg-[#2C2C2C] [&_code]:text-white/90 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[13.6px] [&_code]:font-mono [&_code]:before:content-none [&_code]:after:content-none [&_.katex]:text-lg [&_.katex-display]:my-4">
                           {message.content ? (
                             <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
-                              rehypePlugins={[rehypeRaw]}
+                              remarkPlugins={[remarkGfm, remarkMath]}
+                              rehypePlugins={[rehypeRaw, rehypeKatex]}
                               components={{
                                 pre: PreBlock,
+                                code: ({
+                                  node,
+                                  inline,
+                                  className,
+                                  children,
+                                  ...props
+                                }) => {
+                                  const match = /language-(\w+)/.exec(
+                                    className || "",
+                                  );
+                                  const isLatex = match && match[1] === "latex";
+                                  if (isLatex) {
+                                    return (
+                                      <span className="latex">{children}</span>
+                                    );
+                                  }
+                                  return (
+                                    <code className={className} {...props}>
+                                      {children}
+                                    </code>
+                                  );
+                                },
                               }}
                             >
                               {message.content}
