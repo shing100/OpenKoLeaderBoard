@@ -221,40 +221,49 @@ const DocumentParser = () => {
                     </div>
                   </div>
                 ) : selectedFile ? (
-                  <div className="relative bg-white shadow-lg">
+                  <div className="relative bg-white shadow-lg rounded-lg overflow-hidden">
                     {selectedFile.type === "application/pdf" ? (
                       <Document
                         file={selectedFile}
                         onLoadSuccess={({ numPages }) => setNumPages(numPages)}
                         loading={
-                          <div className="flex items-center justify-center h-full">
+                          <div className="flex items-center justify-center h-[600px]">
                             <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
                           </div>
                         }
                         error={
-                          <div className="flex items-center justify-center h-full text-destructive">
+                          <div className="flex items-center justify-center h-[600px] text-destructive">
                             Failed to load PDF
                           </div>
                         }
+                        className="max-h-[calc(100vh-16rem)] overflow-auto"
                       >
                         <Page
                           pageNumber={currentPage}
                           scale={zoom / 100}
                           rotate={rotation}
-                          renderTextLayer={false}
-                          renderAnnotationLayer={false}
+                          renderTextLayer={true}
+                          renderAnnotationLayer={true}
+                          className="shadow-lg mx-auto"
+                          loading={
+                            <div className="flex items-center justify-center h-[600px]">
+                              <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                            </div>
+                          }
                         />
                       </Document>
                     ) : (
-                      <img
-                        src={URL.createObjectURL(selectedFile)}
-                        alt="Selected document"
-                        className="w-full h-full object-contain"
-                        style={{
-                          transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
-                          transformOrigin: "center center",
-                        }}
-                      />
+                      <div className="relative w-full h-[calc(100vh-16rem)] bg-[#f0f0f0] flex items-center justify-center overflow-hidden">
+                        <img
+                          src={URL.createObjectURL(selectedFile)}
+                          alt="Selected document"
+                          className="max-w-full max-h-full object-contain transition-transform duration-200"
+                          style={{
+                            transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
+                            transformOrigin: "center center",
+                          }}
+                        />
+                      </div>
                     )}
                   </div>
                 ) : (
@@ -370,12 +379,40 @@ const DocumentParser = () => {
                   Failed to process document
                 </div>
               ) : selectedFile ? (
-                <div className="space-y-4">
-                  <div className="animate-pulse space-y-4">
-                    <div className="h-4 bg-muted rounded w-3/4"></div>
-                    <div className="h-4 bg-muted rounded w-1/2"></div>
-                    <div className="h-4 bg-muted rounded w-5/6"></div>
-                    <div className="h-4 bg-muted rounded w-2/3"></div>
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">파일 정보</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">파일명:</span>
+                        <span className="ml-2">{selectedFile.name}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">크기:</span>
+                        <span className="ml-2">
+                          {Math.round(selectedFile.size / 1024)} KB
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">타입:</span>
+                        <span className="ml-2">{selectedFile.type}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">파싱 결과</h3>
+                    <div className="space-y-2">
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <pre className="whitespace-pre-wrap text-sm">
+                          {JSON.stringify(
+                            { text: "Sample parsed content" },
+                            null,
+                            2,
+                          )}
+                        </pre>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (
