@@ -38,6 +38,11 @@ export function useDocuments() {
   };
 
   const uploadDocument = async (file: File) => {
+    // Convert HWP PDF to standard PDF mime type if needed
+    const modifiedFile = new File([file], file.name, {
+      type:
+        file.type === "application/haansoftpdf" ? "application/pdf" : file.type,
+    });
     try {
       // Upload file to storage
       const fileExt = file.name.split(".").pop();
@@ -66,7 +71,7 @@ export function useDocuments() {
       // Upload file
       const { error: uploadError } = await supabase.storage
         .from("documents")
-        .upload(filePath, file, {
+        .upload(filePath, modifiedFile, {
           cacheControl: "3600",
           upsert: false,
         });
@@ -78,20 +83,24 @@ export function useDocuments() {
         data: { publicUrl },
       } = supabase.storage.from("documents").getPublicUrl(filePath);
 
-      // Create document record
-      const { error: insertError } = await supabase.from("documents").insert([
-        {
-          name: file.name,
-          file_type: fileExt,
-          file_url: publicUrl,
-        },
-      ]);
+      // Create document record and return the inserted row
+      const { data: insertedDoc, error: insertError } = await supabase
+        .from("documents")
+        .insert([
+          {
+            name: file.name,
+            file_type: fileExt,
+            file_url: publicUrl,
+          },
+        ])
+        .select()
+        .single();
 
       if (insertError) throw insertError;
 
       // Refresh documents list
       await fetchDocuments();
-      return publicUrl;
+      return insertedDoc.id;
     } catch (error) {
       console.error("Error uploading document:", error);
       throw error;

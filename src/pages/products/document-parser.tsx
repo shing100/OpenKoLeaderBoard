@@ -65,10 +65,10 @@ const DocumentParser = () => {
       setRotation(0);
 
       try {
-        const url = await uploadDocument(file);
+        const docId = await uploadDocument(file);
         // Here you would typically call your document parsing API
         const parsedContent = { text: "Sample parsed content" };
-        await updateParsedContent(url, parsedContent);
+        await updateParsedContent(docId, parsedContent);
       } catch (uploadError) {
         console.error("Upload error:", uploadError);
         throw new Error(
