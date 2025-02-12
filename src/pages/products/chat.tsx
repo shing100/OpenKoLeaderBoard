@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { SendHorizontal, Copy, Check, Plus, Sparkles } from "lucide-react";
 import { MessageActions } from "@/components/chat/message-actions";
 import { useState, useRef, useEffect } from "react";
-import { useChat } from "@/hooks/useChat";
+import { useChat } from "@/lib/hooks/useChat.ts";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -174,7 +174,6 @@ const ChatProduct = () => {
                                 pre: PreBlock,
                                 code: ({
                                   node,
-                                  inline,
                                   className,
                                   children,
                                   ...props

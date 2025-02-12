@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { streamChat, MODEL_NAME } from "@/lib/openai";
-import { supabase } from "@/lib/supabase";
+import { streamChat, MODEL_NAME } from "@/lib/openai.ts";
+import { supabase } from "@/lib/supabase.ts";
 import { nanoid } from "nanoid";
 
 export interface Message {

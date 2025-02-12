@@ -2,7 +2,8 @@
 node_modules
 .pnp
 .pnp.js
-
+.swc
+node_modules/**
 # Testing
 coverage
 
