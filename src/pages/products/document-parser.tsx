@@ -6,8 +6,7 @@ import { DocumentViewer } from "@/components/document-parser/document-viewer";
 import { ParsedResults } from "@/components/document-parser/parsed-results";
 import { pdfjs } from "react-pdf";
 
-// Initialize PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.mjs"
 
 const DocumentParser = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
